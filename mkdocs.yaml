@@ -1,0 +1,78 @@
+site_name: ureflect Documentation
+site_description: Header-only C++23 compile-time reflection library — zero runtime cost, no macros, no dependencies
+site_url: https://usub-development.github.io/ureflect/
+repo_url: https://github.com/Usub-development/ureflect
+repo_name: Usub-development/ureflect
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.top
+    - navigation.instant
+    - navigation.tracking
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - autorefs
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - admonition
+  - attr_list
+  - toc:
+      permalink: true
+
+nav:
+  - Overview: index.md
+  - Quickstart: quickstart.md
+  - Core Concepts: concepts.md
+  - API Reference:
+      - Member Names & Types: member-info.md
+      - Tie & Field Access: tie.md
+      - Field Iteration: for-each-field.md
+      - Enum Reflection: enum.md
+      - Type Metadata: typeinfo.md
+  - Integration:
+      - JSON Serialization: integration-json.md
+      - SQL Mapping: integration-sql.md
+      - OpenAPI Generator: integration-openapi.md
+  - Performance Notes: performance.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Usub-development/ureflect
+      name: GitHub Repository
+    - icon: fontawesome/solid/star
+      link: https://github.com/Usub-development/ureflect/stargazers
+      name: Star on GitHub
+
+copyright: >
+  Copyright © 2025 Usub-development, Kirill Zhukov (g2px1)
