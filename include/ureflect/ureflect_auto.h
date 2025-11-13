@@ -19,14 +19,16 @@ namespace ureflect
 {
     constexpr std::size_t sv_find_first(std::string_view s, char ch, std::size_t from = 0)
     {
-        for (std::size_t i = from; i < s.size(); ++i) if (s[i] == ch) return i;
+        for (std::size_t i = from; i < s.size(); ++i)
+            if (s[i] == ch) return i;
         return std::string_view::npos;
     }
 
     constexpr std::size_t sv_find_first_of(std::string_view s, std::string_view set, std::size_t from = 0)
     {
         for (std::size_t i = from; i < s.size(); ++i)
-            for (char c : set) if (s[i] == c) return i;
+            for (char c : set)
+                if (s[i] == c) return i;
         return std::string_view::npos;
     }
 
@@ -65,6 +67,14 @@ namespace ureflect
         return std::string_view::npos;
     }
 
+    constexpr std::size_t sv_min_pos(std::size_t a, std::size_t b)
+    {
+        constexpr auto NP = std::string_view::npos;
+        if (a == NP) return b;
+        if (b == NP) return a;
+        return a < b ? a : b;
+    }
+
     template <class T>
     consteval std::string_view type_name()
     {
@@ -90,19 +100,53 @@ namespace ureflect
     {
         std::string_view f = UREFL_PRETTY;
 #if defined(_MSC_VER) && !defined(__clang__)
-        const auto pos = sv_rfind_token(f, "::");
-        const auto end = sv_find_first(f, '>', pos == std::string_view::npos ? 0 : pos + 2);
-        return (pos == std::string_view::npos || end == std::string_view::npos)
-                   ? std::string_view{}
-                   : f.substr(pos + 2, end - (pos + 2));
+        constexpr std::string_view key = "E = ";
+        const auto pos_e = sv_find_token(f, key);
+        if (pos_e == std::string_view::npos)
+        {
+            const auto pos = sv_rfind_token(f, "::");
+            const auto end = sv_find_first(f, '>', pos == std::string_view::npos ? 0 : pos + 2);
+            return (pos == std::string_view::npos || end == std::string_view::npos)
+                       ? std::string_view{}
+                       : f.substr(pos + 2, end - (pos + 2));
+        }
+
+        const auto b = pos_e + key.size();
+        auto end = f.size();
+        const auto semi = sv_find_first(f, ';', b);
+        const auto rb = sv_find_first(f, '>', b);
+        end = sv_min_pos(end, sv_min_pos(semi, rb));
+        auto seg = f.substr(b, end - b);
+        const auto pos = sv_rfind_token(seg, "::");
+        if (pos != std::string_view::npos)
+            return seg.substr(pos + 2);
+        return seg;
 #else
-        const auto eq = sv_rfind_token(f, "= ");
-        const auto rb = sv_rfind_token(f, "]");
-        const auto end = (rb == std::string_view::npos) ? f.size() : rb;
-        const auto left = f.substr(0, end);
-        const auto pos = sv_rfind_token(left, "::");
-        const auto b = (pos == std::string_view::npos) ? (eq == std::string_view::npos ? 0 : eq + 2) : pos + 2;
-        return f.substr(b, end - b);
+        constexpr std::string_view key = "E = ";
+        const auto pos_e = sv_find_token(f, key);
+        if (pos_e == std::string_view::npos)
+        {
+            const auto eq = sv_rfind_token(f, "= ");
+            const auto rb = sv_rfind_token(f, "]");
+            const auto end0 = (rb == std::string_view::npos) ? f.size() : rb;
+            const auto left = f.substr(0, end0);
+            const auto pos0 = sv_rfind_token(left, "::");
+            const auto b0 = (pos0 == std::string_view::npos)
+                                ? (eq == std::string_view::npos ? 0 : eq + 2)
+                                : pos0 + 2;
+            return f.substr(b0, end0 - b0);
+        }
+
+        const auto b = pos_e + key.size();
+        auto end = f.size();
+        const auto semi = sv_find_first(f, ';', b);
+        const auto rb = sv_find_first(f, ']', b);
+        end = sv_min_pos(end, sv_min_pos(semi, rb));
+        auto seg = f.substr(b, end - b);
+        const auto pos = sv_rfind_token(seg, "::");
+        if (pos != std::string_view::npos)
+            return seg.substr(pos + 2);
+        return seg;
 #endif
     }
 
@@ -110,7 +154,7 @@ namespace ureflect
     {
         template <class X>
             requires(!std::same_as<std::remove_cvref_t<X>, const char*> &&
-                !std::same_as<std::remove_cvref_t<X>, std::nullptr_t>)
+                     !std::same_as<std::remove_cvref_t<X>, std::nullptr_t>)
         constexpr operator X() const;
 
         constexpr operator std::string_view() const { return {}; }
@@ -2230,6 +2274,7 @@ namespace ureflect
         }
     };
 
+
     template <class T, std::size_t N = count_members<T>>
         requires(N <= 128)
     constexpr auto to_tie(T& v) { return tie_dispatch<N, T>::apply(v); }
@@ -2274,7 +2319,7 @@ namespace ureflect
         static constexpr std::size_t pos = ::ureflect::sv_find_token(name, "UREFLECT_FIELD");
         static constexpr char sep_before = (pos > 0) ? name[pos - 1] : ':';
         static constexpr char tail_after = (pos != std::string_view::npos &&
-                                               pos + sizeof("UREFLECT_FIELD") - 1 < name.size())
+                                            pos + sizeof("UREFLECT_FIELD") - 1 < name.size())
                                                ? name[pos + sizeof("UREFLECT_FIELD") - 1]
                                                : ']';
     };
@@ -2337,7 +2382,6 @@ namespace ureflect
 
     template <std::size_t N, class T>
     inline constexpr std::string_view member_nameof = member_nameof_impl<N, T>::value;
-
 
     template <class T, std::size_t... I>
     consteval auto member_names_impl(std::index_sequence<I...>)
