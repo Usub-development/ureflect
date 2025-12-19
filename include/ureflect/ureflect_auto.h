@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <tuple>
 #include <utility>
+#include <cstdint>
 
 #if defined(__clang__) || defined(__GNUC__)
 #define UREFL_PRETTY __PRETTY_FUNCTION__
