@@ -2313,8 +2313,8 @@ namespace ureflect {
     }
 
 
-    constexpr std::uint64_t fnv1a_64_a(std::string_view s) {
-        std::uint64_t h = 14695981039346656037ull;
+    constexpr uint64_t fnv1a_64_a(std::string_view s) {
+        uint64_t h = 14695981039346656037ull;
         for (char c: s) {
             h ^= (std::uint8_t) c;
             h *= 1099511628211ull;
@@ -2322,8 +2322,8 @@ namespace ureflect {
         return h;
     }
 
-    constexpr std::uint64_t fnv1a_64_b(std::string_view s) {
-        std::uint64_t h = 1099511628211ull;
+    constexpr uint64_t fnv1a_64_b(std::string_view s) {
+        uint64_t h = 1099511628211ull;
         for (char c: s) {
             h ^= (std::uint8_t) c;
             h *= 14695981039346656037ull;
@@ -2334,13 +2334,13 @@ namespace ureflect {
     template<class T>
     inline constexpr auto member_hash_a =
             []<std::size_t... I>(std::index_sequence<I...>) {
-                return std::array<std::uint64_t, sizeof...(I)>{fnv1a_64_a(member_nameof<I, T>)...};
+                return std::array<uint64_t, sizeof...(I)>{fnv1a_64_a(member_nameof<I, T>)...};
             }(std::make_index_sequence<count_members<T> >{});
 
     template<class T>
     inline constexpr auto member_hash_b =
             []<std::size_t... I>(std::index_sequence<I...>) {
-                return std::array<std::uint64_t, sizeof...(I)>{fnv1a_64_b(member_nameof<I, T>)...};
+                return std::array<uint64_t, sizeof...(I)>{fnv1a_64_b(member_nameof<I, T>)...};
             }(std::make_index_sequence<count_members<T> >{});
 
     template<class T>
@@ -2360,9 +2360,9 @@ namespace ureflect {
         return -1;
     }
 
-    constexpr std::uint64_t rotl64(std::uint64_t x, int r) { return (x << r) | (x >> (64 - r)); }
+    constexpr uint64_t rotl64(uint64_t x, int r) { return (x << r) | (x >> (64 - r)); }
 
-    constexpr std::uint64_t mix64(std::uint64_t x) {
+    constexpr uint64_t mix64(uint64_t x) {
         x ^= x >> 33;
         x *= 0xff51afd7ed558ccdULL;
         x ^= x >> 33;
@@ -2371,8 +2371,8 @@ namespace ureflect {
         return x;
     }
 
-    constexpr std::uint64_t hash64(std::string_view s, std::uint64_t seed) {
-        std::uint64_t h = mix64(seed ^ static_cast<std::uint16_t>(s.size()));
+    constexpr uint64_t hash64(std::string_view s, uint64_t seed) {
+        uint64_t h = mix64(seed ^ static_cast<std::uint16_t>(s.size()));
         for (unsigned char c: s) {
             h ^= mix64(static_cast<std::uint16_t>(c) + 0x9e3779b97f4a7c15ULL);
             h = rotl64(h, 27) * 0x3c79ac492ba7b653ULL + 0x1c69b3f74ac4ae35ULL;
@@ -2398,8 +2398,8 @@ namespace ureflect {
         static constexpr std::size_t m = next_pow2((N * 2u) + 1u);
 
         std::array<std::uint16_t, m> g{};
-        std::uint64_t seed1{};
-        std::uint64_t seed2{};
+        uint64_t seed1{};
+        uint64_t seed2{};
         bool ok{false};
 
         std::array<std::array<std::uint16_t, N>, m> adj{};
@@ -2510,7 +2510,7 @@ namespace ureflect {
         mph_bdz<N> tab{};
 
         consteval mph_fields() {
-            for (std::uint64_t s = 1; s < 4096; ++s) {
+            for (uint64_t s = 1; s < 4096; ++s) {
                 this->tab.seed1 = mix64(0xA5A5A5A5A5A5A5A5ULL ^ s);
                 this->tab.seed2 = mix64(0x5A5A5A5A5A5A5A5AULL ^ (s * 1315423911ULL));
                 if (this->tab.build(member_names<T>)) {
