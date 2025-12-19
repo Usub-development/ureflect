@@ -2372,9 +2372,9 @@ namespace ureflect {
     }
 
     constexpr std::uint64_t hash64(std::string_view s, std::uint64_t seed) {
-        std::uint64_t h = mix64(seed ^ (std::uint64_t) s.size());
+        std::uint64_t h = mix64(seed ^ static_cast<std::uint16_t>(s.size()));
         for (unsigned char c: s) {
-            h ^= mix64((std::uint64_t) c + 0x9e3779b97f4a7c15ULL);
+            h ^= mix64(static_cast<std::uint16_t>(c) + 0x9e3779b97f4a7c15ULL);
             h = rotl64(h, 27) * 0x3c79ac492ba7b653ULL + 0x1c69b3f74ac4ae35ULL;
         }
         return mix64(h);
@@ -2434,8 +2434,8 @@ namespace ureflect {
                 this->ev[i] = v;
 
                 if (this->adj_cnt[u] >= N || this->adj_cnt[v] >= N) return false; // N <= 128
-                this->adj[u][this->adj_cnt[u]++] = (std::uint16_t) i;
-                this->adj[v][this->adj_cnt[v]++] = (std::uint16_t) i;
+                this->adj[u][this->adj_cnt[u]++] = static_cast<std::uint16_t>(i);
+                this->adj[v][this->adj_cnt[v]++] = static_cast<std::uint16_t>(i);
             }
 
             std::array<std::uint8_t, m> deg{};
@@ -2444,7 +2444,7 @@ namespace ureflect {
             std::array<std::uint16_t, m> q{};
             std::size_t qh = 0, qt = 0;
             for (std::size_t v = 0; v < m; ++v)
-                if (deg[v] == 1) q[qt++] = (std::uint16_t) v;
+                if (deg[v] == 1) q[qt++] = static_cast<std::uint16_t>(v);
 
             std::array<std::uint16_t, N> stack_v{};
             std::array<std::uint16_t, N> stack_e{};
@@ -2526,7 +2526,7 @@ namespace ureflect {
             auto u = this->tab.h1(name);
             auto v = this->tab.h2(name);
             auto idx = (int) ((this->tab.g[u] + this->tab.g[v]) % this->tab.n);
-            if (member_names<T>[(std::size_t) idx] != name) return -1;
+            if (member_names<T>[static_cast<std::size_t>(idx)] != name) return -1;
             return idx;
         }
     };
