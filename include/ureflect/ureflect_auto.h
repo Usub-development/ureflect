@@ -2255,35 +2255,61 @@ namespace ureflect {
 
         static consteval std::string_view compute() {
             using namespace ::ureflect;
+
+            constexpr auto trim = [](std::string_view s) consteval -> std::string_view {
+                auto is_id = [](char c) consteval {
+                    return (c == '_') ||
+                           (c >= '0' && c <= '9') ||
+                           (c >= 'a' && c <= 'z') ||
+                           (c >= 'A' && c <= 'Z');
+                };
+
+                while (!s.empty() && !is_id(s.front()))
+                    s.remove_prefix(1);
+
+                std::size_t n = 0;
+                while (n < s.size() && is_id(s[n]))
+                    ++n;
+
+                return s.substr(0, n);
+            };
+
             constexpr std::string_view m1 = "&uref_external.";
             std::size_t k = sv_find_token(raw, m1);
             if (k != std::string_view::npos) {
                 const std::size_t b = k + m1.size();
-                const std::size_t e = sv_find_first_of(raw, std::string_view("}]>), ;"), b);
-                return raw.substr(b, (e == std::string_view::npos ? raw.size() : e) - b);
+                constexpr std::string_view stops = " \t\r\n,;:)]}>\"'";
+                const std::size_t e = sv_find_first_of(raw, stops, b);
+                return trim(raw.substr(b, (e == std::string_view::npos ? raw.size() : e) - b));
             }
 
             constexpr std::string_view m2 = "uref_external.";
             k = sv_find_token(raw, m2);
             if (k != std::string_view::npos) {
                 const std::size_t b = k + m2.size();
-                const std::size_t e = sv_find_first_of(raw, std::string_view("}]>), ;"), b);
-                return raw.substr(b, (e == std::string_view::npos ? raw.size() : e) - b);
+                constexpr std::string_view stops = " \t\r\n,;:)]}>\"'";
+                const std::size_t e = sv_find_first_of(raw, stops, b);
+                return trim(raw.substr(b, (e == std::string_view::npos ? raw.size() : e) - b));
             }
 
-            const std::size_t end_pos = sv_find_token(raw, reflect_field::name.substr(
-                                                          sv_find_token(reflect_field::name, "UREFLECT_FIELD") + sizeof(
-                                                              "UREFLECT_FIELD") - 1));
+            const std::size_t end_pos = sv_find_token(
+                raw,
+                reflect_field::name.substr(
+                    sv_find_token(reflect_field::name, "UREFLECT_FIELD") + sizeof("UREFLECT_FIELD") - 1));
+
             const std::string_view left = (end_pos == std::string_view::npos) ? raw : raw.substr(0, end_pos);
 
             std::size_t sep = std::string_view::npos;
             for (std::size_t i = 0; i < left.size(); ++i)
                 if (left[i] == reflect_field::sep_before) sep = i;
 
-            if (sep != std::string_view::npos) return left.substr(sep + 1);
+            if (sep != std::string_view::npos)
+                return trim(left.substr(sep + 1));
 
             const std::size_t dbl = sv_rfind_token(left, "::");
-            if (dbl != std::string_view::npos) return left.substr(dbl + 2);
+            if (dbl != std::string_view::npos)
+                return trim(left.substr(dbl + 2));
+
             return {};
         }
 
@@ -2375,7 +2401,7 @@ namespace ureflect {
     constexpr uint64_t hash64(std::string_view s, uint64_t seed) {
         uint64_t h = mix64(seed ^ static_cast<std::uint16_t>(s.size()));
         for (unsigned char c: s) {
-            h ^= mix64(static_cast<std::uint16_t>(c) + 0x9e3779b97f4a7c15ULL);
+            h ^= mix64(static_cast<std::uint64_t>(c) + 0x9e3779b97f4a7c15ULL);
             h = rotl64(h, 27) * 0x3c79ac492ba7b653ULL + 0x1c69b3f74ac4ae35ULL;
         }
         return mix64(h);
@@ -2527,7 +2553,7 @@ namespace ureflect {
             auto u = this->tab.h1(name);
             auto v = this->tab.h2(name);
             auto idx = (int) ((this->tab.g[u] + this->tab.g[v]) % this->tab.n);
-            if (member_names<T>[static_cast<std::size_t>(idx)] != name) return -1;
+            if (!sv_eq(member_names<T>[static_cast<std::size_t>(idx)], name)) return -1;
             return idx;
         }
     };
